@@ -24,22 +24,36 @@ The dashboard will open automatically at http://localhost:5173
 Open a **new terminal** and run:
 
 ### Act 1: The Attack (Without Vigil)
+
 ```bash
 python3 vigil_cli.py demo attack
 ```
+
 Watch credentials get stolen in real-time.
 
 ### Act 2: Vigil Blocks It
+
 ```bash
 python3 vigil_cli.py demo block
 ```
+
 Vigil detects and blocks the malicious package.
 
 ### Act 3: Prompt Injection Detection
+
 ```bash
 python3 vigil_cli.py demo inject
 ```
+
 AlignGuard catches hidden injection attempts.
+
+### Act 4: Multi-Agent System Demo
+
+```bash
+python3 multi_agent_demo.py
+```
+
+Shows a 3-agent pipeline (Researcher → Analyst → Executor) protected by AlignGuard at each stage. Demonstrates sophisticated attacks including hidden text, goal redirection, and base64-encoded injections.
 
 ## Manual Scanning
 
@@ -60,12 +74,14 @@ Press `Ctrl+C` in the terminal running `./demo.sh`
 ## Troubleshooting
 
 **Port already in use?**
+
 ```bash
 lsof -ti:8000 | xargs kill -9
 lsof -ti:5173 | xargs kill -9
 ```
 
 **Frontend not loading?**
+
 ```bash
 cd frontend
 npm install
@@ -73,6 +89,7 @@ npm run dev
 ```
 
 **Backend not responding?**
+
 ```bash
 cd backend
 pip3 install -r requirements.txt

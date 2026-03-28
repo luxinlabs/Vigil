@@ -65,6 +65,7 @@ chmod +x demo.sh
 ```
 
 This will:
+
 1. Build mock malicious packages
 2. Start the backend API (port 8000)
 3. Start the frontend dashboard (port 5173)
@@ -106,6 +107,24 @@ python3 vigil_cli.py demo inject
 
 **Output**: AlignGuard finds the hidden instruction and quarantines the document before it reaches the agent.
 
+### 🤖 Multi-Agent System Demo
+
+Shows AlignGuard protecting a 3-agent pipeline (Researcher → Analyst → Executor) from sophisticated prompt injection attacks:
+
+```bash
+python3 multi_agent_demo.py
+```
+
+**Demonstrates**:
+
+- ✅ Stage-by-stage protection across multiple agents
+- ✅ Early detection prevents downstream contamination
+- ✅ Goal preservation for all agents
+- ✅ Hidden injection, goal redirection, and base64-encoded attacks
+- ✅ Real-time dashboard integration
+
+See [MULTI_AGENT_DEMO.md](MULTI_AGENT_DEMO.md) for detailed documentation.
+
 ---
 
 ## 🔧 CLI Commands
@@ -125,6 +144,7 @@ python3 vigil_cli.py scan <package-name>
 ```
 
 Examples:
+
 ```bash
 python3 vigil_cli.py scan mock-litellm==1.82.7    # Malicious
 python3 vigil_cli.py scan mock-requests==2.31.0   # Clean
@@ -175,18 +195,18 @@ python3 vigil_cli.py scan mock-cursor-plugin==1.0.0  # Transitive attack
 
 ## 🆚 Competitive Positioning
 
-| Feature | Snyk | Socket | Sonatype | Aikido | **Vigil** |
-|---------|------|--------|----------|--------|-----------|
-| **CVE Database** | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Behavioral Analysis** | ❌ | Partial | ❌ | ❌ | ✅ |
-| **.pth File Detection** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Import-Time Analysis** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **C2 Domain Detection** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Zero-Day Detection** | ❌ | Partial | ❌ | ❌ | ✅ |
-| **Prompt Injection** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Agent Alignment** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Pre-Install Scanning** | ❌ | ✅ | ❌ | ❌ | ✅ |
-| **Real-Time Dashboard** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Feature                  | Snyk | Socket  | Sonatype | Aikido | **Vigil** |
+| ------------------------ | ---- | ------- | -------- | ------ | --------- |
+| **CVE Database**         | ✅   | ✅      | ✅       | ✅     | ❌        |
+| **Behavioral Analysis**  | ❌   | Partial | ❌       | ❌     | ✅        |
+| **.pth File Detection**  | ❌   | ❌      | ❌       | ❌     | ✅        |
+| **Import-Time Analysis** | ❌   | ❌      | ❌       | ❌     | ✅        |
+| **C2 Domain Detection**  | ❌   | ❌      | ❌       | ❌     | ✅        |
+| **Zero-Day Detection**   | ❌   | Partial | ❌       | ❌     | ✅        |
+| **Prompt Injection**     | ❌   | ❌      | ❌       | ❌     | ✅        |
+| **Agent Alignment**      | ❌   | ❌      | ❌       | ❌     | ✅        |
+| **Pre-Install Scanning** | ❌   | ✅      | ❌       | ❌     | ✅        |
+| **Real-Time Dashboard**  | ✅   | ✅      | ✅       | ✅     | ✅        |
 
 **Key Differentiator**: Vigil is the only tool that combines supply chain security with agent alignment security, and uses behavioral analysis instead of CVE databases to catch zero-day attacks.
 
@@ -199,6 +219,7 @@ python3 vigil_cli.py scan mock-cursor-plugin==1.0.0  # Transitive attack
 Vigil uses a weighted scoring system (0.0 - 1.0):
 
 **Supply Chain Patterns:**
+
 - `.pth` file present: +0.50 (CRITICAL)
 - Base64 + subprocess in .pth: +0.40 each
 - Known C2 domain: Score = 1.0 (instant block)
@@ -207,11 +228,13 @@ Vigil uses a weighted scoring system (0.0 - 1.0):
 - Missing RECORD file: +0.10
 
 **Verdicts:**
+
 - Score ≥ 0.7: **BLOCKED** (package not installed)
 - Score ≥ 0.3: **WARNING** (flagged for review)
 - Score < 0.3: **ALLOWED**
 
 **Prompt Injection Patterns:**
+
 - "ignore previous instructions": +0.40
 - "your new goal is": +0.35
 - "do not tell the user": +0.45
@@ -219,6 +242,7 @@ Vigil uses a weighted scoring system (0.0 - 1.0):
 - "exfiltrate data": +0.60
 
 **Verdicts:**
+
 - Score ≥ 0.5: **BLOCKED** (document quarantined)
 - Score ≥ 0.25: **WARNING**
 - Score < 0.25: **CLEAN**
@@ -263,6 +287,7 @@ WS /ws
 ```
 
 **Message Types:**
+
 - `history`: Initial event history on connect
 - `scan_event`: Supply chain scan result
 - `align_event`: AlignGuard scan result
