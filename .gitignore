@@ -66,3 +66,13 @@ logs/
 *.tmp
 *.temp
 .cache/
+
+# Documentation files (except README.md)
+AGENT_SCENARIOS.md
+CHEAT_SHEET.md
+DEMO_SCRIPT.md
+LINE_BY_LINE_DEMO.md
+MULTI_AGENT_DEMO.md
+MULTI_AGENT_SUMMARY.md
+QUICKSTART.md
+TERMINAL_TESTING.md
