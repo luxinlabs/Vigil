@@ -6,13 +6,11 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const MOCK_SCAN_PLAN = {
   project_name: "Demo AI Security Project",
   repo_url: "https://github.com/example/ai-project",
-  overview: {
-    total_phases: 4,
-    estimated_duration: "45-60 minutes",
-    confidence_score: 0.92,
-    risk_level: "MEDIUM"
-  },
-  phases: [
+  generated_at: new Date().toISOString(),
+  estimated_duration: "45-60 minutes",
+  confidence_score: 0.92,
+  risk_level: "MEDIUM",
+  scan_phases: [
     {
       name: "Dependency Analysis",
       description: "Scan all Python dependencies for known vulnerabilities",
@@ -109,6 +107,26 @@ export default function ScanPlanTab() {
     setError(null);
     setScanPlan(null);
     
+    // Check if backend is configured
+    const hasBackend = API_URL && !API_URL.includes('localhost');
+    
+    if (!hasBackend) {
+      // Use mock data immediately in production without backend
+      console.log('Using mock data (no backend configured)');
+      setTimeout(() => {
+        setScanPlan({
+          ...MOCK_SCAN_PLAN,
+          repo_url: repoUrl,
+          project_name: repoUrl.split('/').pop() || 'AI Security Project'
+        });
+        setActiveSection('overview');
+        setExpandedPhases({});
+        setLoading(false);
+      }, 1500); // Simulate API delay
+      return;
+    }
+    
+    // Try backend if configured
     try {
       const response = await fetch(`${API_URL}/scan/plan`, {
         method: 'POST',
@@ -131,7 +149,7 @@ export default function ScanPlanTab() {
       }
     } catch (err) {
       console.warn('Backend unavailable, using mock data:', err);
-      // Use mock data when backend is unavailable
+      // Use mock data when backend fails
       setTimeout(() => {
         setScanPlan({
           ...MOCK_SCAN_PLAN,
@@ -140,7 +158,7 @@ export default function ScanPlanTab() {
         });
         setActiveSection('overview');
         setExpandedPhases({});
-      }, 1500); // Simulate API delay
+      }, 1500);
     } finally {
       setLoading(false);
     }
