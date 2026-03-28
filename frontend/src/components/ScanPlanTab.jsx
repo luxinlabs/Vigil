@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, GitBranch, AlertTriangle, CheckCircle, Clock, Shield, Zap, ExternalLink, ChevronDown, ChevronUp, Sparkles, TrendingUp, Package, Target, Layers } from 'lucide-react';
+import { Search, GitBranch, AlertTriangle, CheckCircle, Clock, Shield, Zap, ExternalLink, ChevronDown, ChevronUp, Sparkles, TrendingUp, Package, Target, Layers, History, Trash2 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -80,13 +80,60 @@ export default function ScanPlanTab() {
   const [loading, setLoading] = useState(false);
   const [scanPlan, setScanPlan] = useState(null);
   const [recentPlans, setRecentPlans] = useState([]);
+  const [savedPlans, setSavedPlans] = useState([]);
   const [error, setError] = useState(null);
   const [expandedPhases, setExpandedPhases] = useState({});
   const [activeSection, setActiveSection] = useState('overview');
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     fetchRecentPlans();
+    loadSavedPlans();
   }, []);
+
+  const loadSavedPlans = () => {
+    try {
+      const saved = localStorage.getItem('vigil_scan_plans');
+      if (saved) {
+        setSavedPlans(JSON.parse(saved));
+      }
+    } catch (err) {
+      console.error('Failed to load saved plans:', err);
+    }
+  };
+
+  const saveScanPlan = (plan) => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('vigil_scan_plans') || '[]');
+      const newPlan = {
+        ...plan,
+        id: Date.now(),
+        saved_at: new Date().toISOString()
+      };
+      const updated = [newPlan, ...saved].slice(0, 10); // Keep last 10 plans
+      localStorage.setItem('vigil_scan_plans', JSON.stringify(updated));
+      setSavedPlans(updated);
+    } catch (err) {
+      console.error('Failed to save plan:', err);
+    }
+  };
+
+  const deleteSavedPlan = (id) => {
+    try {
+      const updated = savedPlans.filter(p => p.id !== id);
+      localStorage.setItem('vigil_scan_plans', JSON.stringify(updated));
+      setSavedPlans(updated);
+    } catch (err) {
+      console.error('Failed to delete plan:', err);
+    }
+  };
+
+  const loadSavedPlan = (plan) => {
+    setScanPlan(plan);
+    setActiveSection('overview');
+    setExpandedPhases({});
+    setShowHistory(false);
+  };
 
   const fetchRecentPlans = async () => {
     try {
@@ -114,11 +161,13 @@ export default function ScanPlanTab() {
       // Use mock data immediately in production without backend
       console.log('Using mock data (no backend configured)');
       setTimeout(() => {
-        setScanPlan({
+        const newPlan = {
           ...MOCK_SCAN_PLAN,
           repo_url: repoUrl,
           project_name: repoUrl.split('/').pop() || 'AI Security Project'
-        });
+        };
+        setScanPlan(newPlan);
+        saveScanPlan(newPlan);
         setActiveSection('overview');
         setExpandedPhases({});
         setLoading(false);
@@ -141,6 +190,7 @@ export default function ScanPlanTab() {
       const data = await response.json();
       if (data.success) {
         setScanPlan(data.plan);
+        saveScanPlan(data.plan);
         setActiveSection('overview');
         setExpandedPhases({});
         fetchRecentPlans();
@@ -151,11 +201,13 @@ export default function ScanPlanTab() {
       console.warn('Backend unavailable, using mock data:', err);
       // Use mock data when backend fails
       setTimeout(() => {
-        setScanPlan({
+        const newPlan = {
           ...MOCK_SCAN_PLAN,
           repo_url: repoUrl,
           project_name: repoUrl.split('/').pop() || 'AI Security Project'
-        });
+        };
+        setScanPlan(newPlan);
+        saveScanPlan(newPlan);
         setActiveSection('overview');
         setExpandedPhases({});
       }, 1500);
@@ -234,6 +286,13 @@ export default function ScanPlanTab() {
                   <span>Analyze</span>
                 )}
               </button>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="px-6 py-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg font-medium shadow-sm hover:shadow transition-all flex items-center gap-2"
+              >
+                <History className="w-4 h-4" />
+                <span>History ({savedPlans.length})</span>
+              </button>
             </div>
 
           {error && (
@@ -252,9 +311,84 @@ export default function ScanPlanTab() {
         </div>
       </div>
 
+      {/* Saved Plans History */}
+      {showHistory && (
+        <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <History className="w-5 h-5" />
+              Saved Scan Plans
+            </h3>
+            <button
+              onClick={() => setShowHistory(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          
+          {savedPlans.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <History className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>No saved scan plans yet</p>
+              <p className="text-sm mt-1">Generate a scan plan to save it to history</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {savedPlans.map((plan) => (
+                <div
+                  key={plan.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer group"
+                  onClick={() => loadSavedPlan(plan)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {plan.project_name}
+                      </h4>
+                      <p className="text-sm text-gray-500 mt-1">{plan.repo_url}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                        <span>Saved: {new Date(plan.saved_at).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span className={`font-semibold ${getRiskColor(plan.risk_level)}`}>
+                          {plan.risk_level} Risk
+                        </span>
+                        <span>•</span>
+                        <span>{plan.scan_phases?.length || 0} Phases</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSavedPlan(plan.id);
+                      }}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title="Delete scan plan"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Scan Plan Results */}
       {scanPlan && (
         <div className="space-y-6 animate-in slide-in-from-bottom">
+          {/* Close Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setScanPlan(null)}
+              className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg font-medium shadow-sm hover:shadow transition-all flex items-center gap-2"
+            >
+              <span>✕</span>
+              <span>Close Scan Plan</span>
+            </button>
+          </div>
+
           {/* Summary Card */}
           <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
             <div className="flex items-start justify-between mb-6">
