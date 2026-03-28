@@ -16,31 +16,31 @@ function AgentTab({ events }) {
     switch (verdict) {
       case 'BLOCKED':
         return {
-          dot: 'bg-vigil-red-light',
-          bg: 'bg-red-900/20 border-red-900/50',
-          text: 'text-vigil-red-light',
-          badge: 'bg-vigil-red text-white'
+          dot: 'bg-red-500',
+          bg: 'bg-red-50 border-red-200',
+          text: 'text-red-600',
+          badge: 'bg-red-600 text-white'
         }
       case 'WARNING':
         return {
-          dot: 'bg-vigil-yellow-light',
-          bg: 'bg-yellow-900/20 border-yellow-900/50',
-          text: 'text-vigil-yellow-light',
-          badge: 'bg-vigil-yellow text-white'
+          dot: 'bg-yellow-500',
+          bg: 'bg-yellow-50 border-yellow-200',
+          text: 'text-yellow-600',
+          badge: 'bg-yellow-600 text-white'
         }
       case 'CLEAN':
         return {
-          dot: 'bg-vigil-green-light',
-          bg: 'bg-green-900/10 border-vigil-border',
-          text: 'text-vigil-green-light',
-          badge: 'bg-vigil-green text-white'
+          dot: 'bg-green-500',
+          bg: 'bg-green-50 border-green-200',
+          text: 'text-green-600',
+          badge: 'bg-green-600 text-white'
         }
       default:
         return {
-          dot: 'bg-slate-500',
-          bg: 'bg-vigil-card border-vigil-border',
-          text: 'text-slate-400',
-          badge: 'bg-slate-700 text-white'
+          dot: 'bg-gray-400',
+          bg: 'bg-white border-gray-200',
+          text: 'text-gray-600',
+          badge: 'bg-gray-600 text-white'
         }
     }
   }
@@ -55,12 +55,12 @@ function AgentTab({ events }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-vigil-card border border-vigil-border rounded-lg p-6">
+      <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
-          <Shield className="w-6 h-6 text-vigil-purple" />
-          <h2 className="text-xl font-bold text-white">AlignGuard — Prompt Injection Detection</h2>
+          <Shield className="w-6 h-6 text-gray-900" />
+          <h2 className="text-xl font-bold text-gray-900">AlignGuard — Prompt Injection Detection</h2>
         </div>
-        <p className="text-slate-400 text-sm">
+        <p className="text-gray-600 text-sm">
           Scans text and documents before feeding to AI agents. Detects prompt injection, goal redirection, 
           concealment commands, and exfiltration instructions.
         </p>
@@ -68,24 +68,24 @@ function AgentTab({ events }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-vigil-card border border-vigil-border rounded-lg overflow-hidden">
-            <div className="p-4 border-b border-vigil-border flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <FileText className="w-5 h-5" />
                 Document Scans
               </h3>
-              <span className="text-sm text-slate-400">{events.length} scans</span>
+              <span className="text-sm text-gray-500">{events.length} scans</span>
             </div>
 
             <div className="overflow-y-auto max-h-[600px]">
               {events.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">
+                <div className="p-8 text-center text-gray-500">
                   <Bot className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No alignment scans yet</p>
                   <p className="text-sm mt-1">Run the injection demo to see results</p>
                 </div>
               ) : (
-                <div className="divide-y divide-vigil-border">
+                <div className="divide-y divide-gray-200">
                   {events.map((event, index) => {
                     const colors = getVerdictColor(event.verdict)
                     const isSelected = selectedEvent?.id === event.id
@@ -98,7 +98,7 @@ function AgentTab({ events }) {
                         key={event.id || index}
                         onClick={() => setSelectedEvent(event)}
                         className={`p-4 cursor-pointer transition-all animate-slide-in border-l-4 ${
-                          isSelected ? 'border-l-vigil-purple' : 'border-l-transparent'
+                          isSelected ? 'border-l-gray-900' : 'border-l-transparent'
                         } ${colors.bg}`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
@@ -107,8 +107,8 @@ function AgentTab({ events }) {
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <FileText className="w-4 h-4 text-slate-400" />
-                              <span className="font-mono text-sm font-medium text-white truncate">
+                              <FileText className="w-4 h-4 text-gray-500" />
+                              <span className="font-mono text-sm font-medium text-gray-900 truncate">
                                 {source}
                               </span>
                               <span className={`px-2 py-0.5 rounded text-xs font-bold ${colors.badge}`}>
@@ -116,7 +116,7 @@ function AgentTab({ events }) {
                               </span>
                             </div>
                             
-                            <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
+                            <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
                               <span className={`font-bold ${colors.text}`}>
                                 Score: {score.toFixed(2)}
                               </span>
@@ -125,8 +125,8 @@ function AgentTab({ events }) {
                             </div>
 
                             {event.findings && event.findings.length > 0 && (
-                              <div className="text-xs text-slate-300 mt-2">
-                                <span className="text-vigil-red-light font-semibold">
+                              <div className="text-xs text-gray-700 mt-2">
+                                <span className="text-red-600 font-semibold">
                                   {event.findings.length} threat(s) detected
                                 </span>
                                 {' — '}
@@ -146,17 +146,17 @@ function AgentTab({ events }) {
 
         <div className="lg:col-span-1">
           {selectedEvent ? (
-            <div className="bg-vigil-card border border-vigil-border rounded-lg overflow-hidden sticky top-6">
-              <div className="p-4 border-b border-vigil-border bg-vigil-bg">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-vigil-red-light" />
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden sticky top-6 shadow-sm">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
                   Injection Analysis
                 </h3>
               </div>
 
               <div className="p-4 max-h-[600px] overflow-y-auto">
                 <div className="mb-4">
-                  <div className="font-mono text-sm font-bold text-white mb-2">
+                  <div className="font-mono text-sm font-bold text-gray-900 mb-2">
                     {selectedEvent.source || selectedEvent.extra?.source || 'Unknown'}
                   </div>
                   
@@ -166,13 +166,13 @@ function AgentTab({ events }) {
                     }`}>
                       {selectedEvent.verdict}
                     </span>
-                    <span className="text-2xl font-bold text-vigil-red-light">
+                    <span className="text-2xl font-bold text-red-600">
                       {(selectedEvent.score || 0).toFixed(2)}
                     </span>
-                    <span className="text-slate-400">/ 1.0</span>
+                    <span className="text-gray-500">/ 1.0</span>
                   </div>
 
-                  <div className="text-sm text-slate-400 mb-4">
+                  <div className="text-sm text-gray-500 mb-4">
                     <div className="flex items-center gap-2 mb-1">
                       <Bot className="w-4 h-4" />
                       <span>Agent: {selectedEvent.agent_id || selectedEvent.extra?.agent_id || 'unknown'}</span>
@@ -182,22 +182,22 @@ function AgentTab({ events }) {
 
                 {selectedEvent.findings && selectedEvent.findings.length > 0 && (
                   <div className="space-y-3 mb-4">
-                    <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">
+                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                       Detected Threats
                     </h4>
                     
                     {selectedEvent.findings.map((finding, index) => (
                       <div
                         key={index}
-                        className="bg-vigil-bg border border-vigil-border rounded-lg p-3"
+                        className="bg-gray-50 border border-gray-200 rounded-lg p-3"
                       >
-                        <div className="text-sm font-semibold text-vigil-red-light mb-1">
+                        <div className="text-sm font-semibold text-red-700 mb-1">
                           {finding.description || finding.type}
                         </div>
                         {finding.matched && (
-                          <div className="mt-2 bg-black/50 rounded p-2">
-                            <div className="text-xs text-slate-500 mb-1">Matched pattern:</div>
-                            <code className="text-xs font-mono text-vigil-red-light break-all">
+                          <div className="mt-2 bg-gray-900 rounded p-2">
+                            <div className="text-xs text-gray-400 mb-1">Matched pattern:</div>
+                            <code className="text-xs font-mono text-red-400 break-all">
                               {finding.matched}
                             </code>
                           </div>
@@ -208,32 +208,32 @@ function AgentTab({ events }) {
                 )}
 
                 {selectedEvent.verdict === 'BLOCKED' && (
-                  <div className="p-3 bg-red-900/20 border border-red-900/50 rounded-lg mb-4">
-                    <div className="text-sm font-semibold text-vigil-red-light mb-1">
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
+                    <div className="text-sm font-semibold text-red-700 mb-1">
                       🚨 Document Quarantined
                     </div>
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-red-600">
                       This document was blocked from reaching the AI agent. The agent's original goal remains intact.
                     </div>
                   </div>
                 )}
 
-                <div className="pt-4 border-t border-vigil-border">
+                <div className="pt-4 border-t border-gray-200">
                   <button
                     onClick={() => handleKillAgent(selectedEvent.agent_id || selectedEvent.extra?.agent_id || 'unknown')}
-                    className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-vigil-red-light rounded-lg transition-colors flex items-center justify-center gap-2 font-semibold"
+                    className="w-full px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors flex items-center justify-center gap-2 font-semibold"
                   >
                     <Skull className="w-4 h-4" />
                     Kill Agent
                   </button>
-                  <p className="text-xs text-slate-500 text-center mt-2">
+                  <p className="text-xs text-gray-500 text-center mt-2">
                     Terminate agent if compromise suspected
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-vigil-card border border-vigil-border rounded-lg p-8 text-center text-slate-500">
+            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center text-gray-500 shadow-sm">
               <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>Select a scan to view details</p>
             </div>

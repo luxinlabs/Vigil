@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Search, GitBranch, AlertTriangle, CheckCircle, Clock, Shield, Zap } from 'lucide-react';
+import { Search, GitBranch, AlertTriangle, CheckCircle, Clock, Shield, Zap, ExternalLink, ChevronDown, ChevronUp, Sparkles, TrendingUp, Package, Target, Layers } from 'lucide-react';
 
 export default function ScanPlanTab() {
   const [repoUrl, setRepoUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const [repoInfo, setRepoInfo] = useState(null);
   const [scanPlan, setScanPlan] = useState(null);
   const [recentPlans, setRecentPlans] = useState([]);
   const [error, setError] = useState(null);
+  const [expandedPhases, setExpandedPhases] = useState({});
+  const [activeSection, setActiveSection] = useState('overview');
 
   useEffect(() => {
     fetchRecentPlans();
@@ -20,29 +21,6 @@ export default function ScanPlanTab() {
       setRecentPlans(data.plans || []);
     } catch (err) {
       console.error('Failed to fetch recent plans:', err);
-    }
-  };
-
-  const handlePreview = async () => {
-    if (!repoUrl.trim()) return;
-    
-    setLoading(true);
-    setError(null);
-    setRepoInfo(null);
-    
-    try {
-      const response = await fetch('http://localhost:8000/scan/plan/preview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo_url: repoUrl })
-      });
-      
-      const data = await response.json();
-      setRepoInfo(data.repo_info);
-    } catch (err) {
-      setError('Failed to fetch repository info. Make sure the URL is valid.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -68,6 +46,8 @@ export default function ScanPlanTab() {
       const data = await response.json();
       if (data.success) {
         setScanPlan(data.plan);
+        setActiveSection('overview');
+        setExpandedPhases({});
         fetchRecentPlans();
       } else {
         setError('Failed to generate scan plan');
@@ -89,292 +69,335 @@ export default function ScanPlanTab() {
     return colors[level] || 'text-gray-400';
   };
 
+  const getRiskBg = (level) => {
+    const colors = {
+      'LOW': 'bg-green-500/10 border-green-500/30',
+      'MEDIUM': 'bg-yellow-500/10 border-yellow-500/30',
+      'HIGH': 'bg-orange-500/10 border-orange-500/30',
+      'CRITICAL': 'bg-red-500/10 border-red-500/30'
+    };
+    return colors[level] || 'bg-gray-500/10 border-gray-500/30';
+  };
+
   const getPriorityColor = (priority) => {
     const colors = {
-      'HIGH': 'bg-red-500/20 text-red-400',
-      'MEDIUM': 'bg-yellow-500/20 text-yellow-400',
-      'LOW': 'bg-green-500/20 text-green-400'
+      'HIGH': 'bg-red-500/20 text-red-300 border-red-500/30',
+      'MEDIUM': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+      'LOW': 'bg-green-500/20 text-green-300 border-green-500/30'
     };
-    return colors[priority] || 'bg-gray-500/20 text-gray-400';
+    return colors[priority] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+  };
+
+  const togglePhase = (index) => {
+    setExpandedPhases(prev => ({ ...prev, [index]: !prev[index] }));
   };
 
   return (
     <div className="space-y-6">
-      {/* Input Section */}
-      <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <GitBranch className="w-5 h-5 text-vigil-purple" />
-          AI-Powered Scan Plan Generator
-        </h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              GitHub Repository URL
-            </label>
-            <div className="flex gap-2">
+      {/* Hero Section */}
+      <div className="bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
+        <div className="mb-6">
+          <div className="mb-2">
+            <h2 className="text-2xl font-semibold text-gray-900">AI Security Analysis</h2>
+            <p className="text-gray-500 text-sm">Powered by GPT-4</p>
+          </div>
+          <p className="text-gray-600 max-w-3xl leading-relaxed">
+            Generate comprehensive security scan plans for any GitHub repository. Get tailored recommendations, threat analysis, and actionable insights in seconds.
+          </p>
+        </div>
+          
+        <div className="space-y-3">
+          <div className="flex gap-3">
+            <div className="flex-1">
               <input
                 type="text"
                 value={repoUrl}
                 onChange={(e) => setRepoUrl(e.target.value)}
-                placeholder="https://github.com/owner/repo"
-                className="flex-1 bg-slate-900 border border-slate-600 rounded px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-vigil-purple"
-                onKeyPress={(e) => e.key === 'Enter' && handlePreview()}
+                placeholder="https://github.com/owner/repository"
+                className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-200 transition-all"
+                onKeyPress={(e) => e.key === 'Enter' && !loading && repoUrl.trim() && handleGeneratePlan()}
               />
-              <button
-                onClick={handlePreview}
-                disabled={loading || !repoUrl.trim()}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            </div>
+            <button
+              onClick={handleGeneratePlan}
+              disabled={loading || !repoUrl.trim()}
+              className="px-8 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow transition-all disabled:hover:bg-gray-900"
               >
-                <Search className="w-4 h-4" />
-                Preview
-              </button>
-              <button
-                onClick={handleGeneratePlan}
-                disabled={loading || !repoUrl.trim()}
-                className="px-6 py-2 bg-vigil-purple hover:bg-purple-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
-              >
-                <Zap className="w-4 h-4" />
-                {loading ? 'Generating...' : 'Generate Plan'}
+                {loading ? (
+                  <span>Analyzing...</span>
+                ) : (
+                  <span>Analyze</span>
+                )}
               </button>
             </div>
-          </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 rounded p-3 text-red-400 text-sm">
-              {error}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="font-medium text-red-900 mb-1">Error</div>
+              <div className="text-red-700 text-sm">{error}</div>
             </div>
           )}
 
           {loading && (
-            <div className="flex items-center gap-2 text-gray-400">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-vigil-purple border-t-transparent"></div>
-              <span>Analyzing repository with AI...</span>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+              <div className="text-gray-900 font-medium mb-1">Analyzing repository...</div>
+              <div className="text-gray-600 text-sm">GPT-4 is analyzing repository structure, dependencies, and security posture. This may take 15-30 seconds.</div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Repository Info */}
-      {repoInfo && (
-        <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-          <h3 className="text-lg font-bold text-white mb-4">Repository Information</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-400">Name:</span>
-              <span className="text-white ml-2 font-medium">{repoInfo.name}</span>
-            </div>
-            <div>
-              <span className="text-gray-400">Language:</span>
-              <span className="text-white ml-2">{repoInfo.language || 'Unknown'}</span>
-            </div>
-            <div>
-              <span className="text-gray-400">Stars:</span>
-              <span className="text-white ml-2">{repoInfo.stars || 0}</span>
-            </div>
-            <div>
-              <span className="text-gray-400">Size:</span>
-              <span className="text-white ml-2">{repoInfo.size || 0} KB</span>
-            </div>
-            {repoInfo.description && (
-              <div className="col-span-2">
-                <span className="text-gray-400">Description:</span>
-                <p className="text-white mt-1">{repoInfo.description}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Scan Plan */}
+      {/* Scan Plan Results */}
       {scanPlan && (
-        <div className="space-y-4">
-          {/* Header */}
-          <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-2xl font-bold text-white">{scanPlan.project_name}</h3>
-                <p className="text-gray-400 mt-1">Generated by GPT-4</p>
-              </div>
-              <div className="text-right">
-                <div className={`text-lg font-bold ${getRiskColor(scanPlan.risk_level)}`}>
-                  {scanPlan.risk_level} RISK
+        <div className="space-y-6 animate-in slide-in-from-bottom">
+          {/* Summary Card */}
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex-1">
+                <div className="mb-2">
+                  <h3 className="text-2xl font-semibold text-gray-900">{scanPlan.project_name}</h3>
+                  <a href={scanPlan.repo_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-sm">
+                    {scanPlan.repo_url}
+                  </a>
                 </div>
-                <div className="text-sm text-gray-400 mt-1">
-                  Confidence: {(scanPlan.confidence_score * 100).toFixed(0)}%
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <span>Generated by GPT-4</span>
+                  <span>•</span>
+                  <span>{new Date(scanPlan.generated_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+              <div className="px-5 py-3 rounded-lg border border-gray-200 bg-gray-50">
+                <div className="text-xs text-gray-500 mb-1">Risk Level</div>
+                <div className={`text-2xl font-bold ${getRiskColor(scanPlan.risk_level)}`}>
+                  {scanPlan.risk_level}
                 </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-300">{scanPlan.estimated_duration}</span>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="text-gray-500 text-sm mb-2">Duration</div>
+                <div className="text-gray-900 font-semibold text-lg">{scanPlan.estimated_duration}</div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="text-gray-500 text-sm mb-2">Confidence</div>
+                <div className="text-gray-900 font-semibold text-lg">{(scanPlan.confidence_score * 100).toFixed(0)}%</div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="text-gray-500 text-sm mb-2">Phases</div>
+                <div className="text-gray-900 font-semibold text-lg">{scanPlan.scan_phases?.length || 0}</div>
               </div>
             </div>
           </div>
 
-          {/* Priority Areas */}
-          {scanPlan.priority_areas && scanPlan.priority_areas.length > 0 && (
-            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-              <h4 className="text-lg font-bold text-white mb-3">Priority Areas</h4>
-              <div className="flex flex-wrap gap-2">
+          {/* Navigation Tabs */}
+          <div className="bg-white rounded-lg p-1 border border-gray-200 flex gap-1 shadow-sm">
+            {['overview', 'phases', 'threats', 'recommendations'].map((section) => (
+              <button
+                key={section}
+                onClick={() => setActiveSection(section)}
+                className={`flex-1 px-5 py-2.5 rounded-md font-medium transition-all ${
+                  activeSection === section
+                    ? 'bg-gray-900 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                {section.charAt(0).toUpperCase() + section.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Overview Section */}
+          {activeSection === 'overview' && scanPlan.priority_areas && (
+            <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+              <h4 className="text-xl font-semibold text-gray-900 mb-5">
+                Priority Focus Areas
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
                 {scanPlan.priority_areas.map((area, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-vigil-purple/20 text-vigil-purple rounded-full text-sm">
-                    {area}
-                  </span>
+                  <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-700 font-semibold text-sm">{idx + 1}</span>
+                      </div>
+                      <span className="text-gray-900 font-medium">{area}</span>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Scan Phases */}
-          {scanPlan.scan_phases && scanPlan.scan_phases.length > 0 && (
-            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-              <h4 className="text-lg font-bold text-white mb-4">Scan Phases</h4>
-              <div className="space-y-4">
-                {scanPlan.scan_phases.map((phase, idx) => (
-                  <div key={idx} className="border border-slate-600 rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h5 className="font-bold text-white">Phase {idx + 1}: {phase.phase}</h5>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(phase.priority)}`}>
+          {/* Scan Phases Section */}
+          {activeSection === 'phases' && scanPlan.scan_phases && (
+            <div className="space-y-4">
+              {scanPlan.scan_phases.map((phase, idx) => (
+                <div key={idx} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-400 transition-colors shadow-sm">
+                  <button
+                    onClick={() => togglePhase(idx)}
+                    className="w-full p-5 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4 flex-1 text-left">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-700 font-semibold">{idx + 1}</span>
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="text-lg font-semibold text-gray-900 mb-1">{phase.phase}</h5>
+                        <p className="text-gray-600 text-sm">{phase.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className={`px-4 py-2 rounded-lg text-sm font-semibold border ${getPriorityColor(phase.priority)}`}>
                         {phase.priority}
                       </span>
+                      <span className="text-gray-500 text-sm font-mono">{phase.estimated_time}</span>
+                      {expandedPhases[idx] ? (
+                        <ChevronUp className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-500" />
+                      )}
                     </div>
-                    <p className="text-gray-400 text-sm mb-3">{phase.description}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
-                      <span>⏱ {phase.estimated_time}</span>
-                      <span>✓ {phase.checks?.length || 0} checks</span>
-                    </div>
-                    {phase.checks && phase.checks.length > 0 && (
-                      <ul className="space-y-1 mt-2">
-                        {phase.checks.slice(0, 3).map((check, cidx) => (
-                          <li key={cidx} className="text-sm text-gray-400 flex items-start gap-2">
-                            <CheckCircle className="w-3 h-3 mt-0.5 text-green-400 flex-shrink-0" />
-                            <span>{check}</span>
-                          </li>
+                  </button>
+                  
+                  {expandedPhases[idx] && phase.checks && (
+                    <div className="px-5 pb-5 border-t border-gray-200">
+                      <div className="pt-4 space-y-2">
+                        {phase.checks.map((check, cidx) => (
+                          <div className="p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
+                            <span className="text-gray-700 text-sm">• {check}</span>
+                          </div>
                         ))}
-                        {phase.checks.length > 3 && (
-                          <li className="text-sm text-gray-500">+ {phase.checks.length - 3} more checks</li>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Threats Section */}
+          {activeSection === 'threats' && scanPlan.specific_threats && (
+            <div className="space-y-4">
+              {scanPlan.specific_threats.map((threat, idx) => (
+                <div key={idx} className="bg-white rounded-lg p-5 border-l-4 border-red-500 hover:bg-gray-50 transition-colors shadow-sm">
+                  <div>
+                    <h5 className="text-lg font-semibold text-red-900 mb-2">{threat.threat}</h5>
+                    <p className="text-gray-700 mb-4 leading-relaxed text-sm">{threat.description}</p>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="text-green-800 font-medium mb-1 text-sm">
+                        Mitigation Strategy
+                      </div>
+                      <p className="text-green-900 text-sm">{threat.mitigation}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Recommendations Section */}
+          {activeSection === 'recommendations' && (
+            <div className="space-y-6">
+              {/* Vigil Modules */}
+              {scanPlan.vigil_modules && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                  <h4 className="text-xl font-semibold text-gray-900 mb-5">
+                    Vigil Module Recommendations
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {scanPlan.vigil_modules.supply_guard && (
+                      <div className={`p-5 rounded-lg border ${scanPlan.vigil_modules.supply_guard.enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-2.5 h-2.5 rounded-full ${scanPlan.vigil_modules.supply_guard.enabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          <h5 className="text-lg font-semibold text-gray-900">SupplyGuard</h5>
+                        </div>
+                        {scanPlan.vigil_modules.supply_guard.enabled ? (
+                          <>
+                            <div className="text-green-700 font-medium mb-2 text-sm">✓ Recommended</div>
+                            {scanPlan.vigil_modules.supply_guard.focus_areas && (
+                              <div className="text-sm text-gray-600">
+                                <span className="text-gray-500">Focus:</span> {scanPlan.vigil_modules.supply_guard.focus_areas.join(', ')}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-gray-500 text-sm">Not recommended for this project</div>
                         )}
-                      </ul>
+                      </div>
+                    )}
+                    {scanPlan.vigil_modules.align_guard && (
+                      <div className={`p-5 rounded-lg border ${scanPlan.vigil_modules.align_guard.enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-2.5 h-2.5 rounded-full ${scanPlan.vigil_modules.align_guard.enabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          <h5 className="text-lg font-semibold text-gray-900">AlignGuard</h5>
+                        </div>
+                        {scanPlan.vigil_modules.align_guard.enabled ? (
+                          <>
+                            <div className="text-green-700 font-medium mb-2 text-sm">✓ Recommended</div>
+                            {scanPlan.vigil_modules.align_guard.focus_areas && (
+                              <div className="text-sm text-gray-600">
+                                <span className="text-gray-500">Focus:</span> {scanPlan.vigil_modules.align_guard.focus_areas.join(', ')}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-gray-500 text-sm">Not recommended for this project</div>
+                        )}
+                      </div>
                     )}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+              )}
 
-          {/* Specific Threats */}
-          {scanPlan.specific_threats && scanPlan.specific_threats.length > 0 && (
-            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-              <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-400" />
-                Specific Threats
-              </h4>
-              <div className="space-y-3">
-                {scanPlan.specific_threats.map((threat, idx) => (
-                  <div key={idx} className="border-l-2 border-red-400 pl-4">
-                    <h5 className="font-bold text-red-400">{threat.threat}</h5>
-                    <p className="text-gray-400 text-sm mt-1">{threat.description}</p>
-                    <p className="text-green-400 text-sm mt-2">
-                      <span className="font-medium">Mitigation:</span> {threat.mitigation}
-                    </p>
+              {/* Recommended Tools */}
+              {scanPlan.recommended_tools && scanPlan.recommended_tools.length > 0 && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                  <h4 className="text-xl font-semibold text-gray-900 mb-5">Recommended Security Tools</h4>
+                  <div className="flex flex-wrap gap-3">
+                    {scanPlan.recommended_tools.map((tool, idx) => (
+                      <div key={idx} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-md text-gray-700 font-medium transition-all cursor-pointer text-sm">
+                        {tool}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Vigil Modules */}
-          {scanPlan.vigil_modules && (
-            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-              <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-vigil-purple" />
-                Vigil Module Recommendations
-              </h4>
-              <div className="space-y-3">
-                {scanPlan.vigil_modules.supply_guard && (
-                  <div className="flex items-start gap-3">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${scanPlan.vigil_modules.supply_guard.enabled ? 'bg-green-400' : 'bg-gray-600'}`}></div>
-                    <div className="flex-1">
-                      <div className="font-medium text-white">SupplyGuard</div>
-                      {scanPlan.vigil_modules.supply_guard.enabled ? (
-                        <>
-                          <div className="text-sm text-green-400">Recommended</div>
-                          {scanPlan.vigil_modules.supply_guard.focus_areas && (
-                            <div className="text-sm text-gray-400 mt-1">
-                              Focus: {scanPlan.vigil_modules.supply_guard.focus_areas.join(', ')}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="text-sm text-gray-500">Not recommended for this project</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {scanPlan.vigil_modules.align_guard && (
-                  <div className="flex items-start gap-3">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${scanPlan.vigil_modules.align_guard.enabled ? 'bg-green-400' : 'bg-gray-600'}`}></div>
-                    <div className="flex-1">
-                      <div className="font-medium text-white">AlignGuard</div>
-                      {scanPlan.vigil_modules.align_guard.enabled ? (
-                        <>
-                          <div className="text-sm text-green-400">Recommended</div>
-                          {scanPlan.vigil_modules.align_guard.focus_areas && (
-                            <div className="text-sm text-gray-400 mt-1">
-                              Focus: {scanPlan.vigil_modules.align_guard.focus_areas.join(', ')}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="text-sm text-gray-500">Not recommended for this project</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Recommended Tools */}
-          {scanPlan.recommended_tools && scanPlan.recommended_tools.length > 0 && (
-            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-              <h4 className="text-lg font-bold text-white mb-3">Recommended Tools</h4>
-              <div className="flex flex-wrap gap-2">
-                {scanPlan.recommended_tools.map((tool, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-slate-700 text-gray-300 rounded text-sm">
-                    {tool}
-                  </span>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
 
       {/* Recent Plans */}
-      {recentPlans.length > 0 && !scanPlan && (
-        <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-          <h3 className="text-lg font-bold text-white mb-4">Recent Scan Plans</h3>
-          <div className="space-y-2">
+      {!scanPlan && recentPlans.length > 0 && (
+        <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+          <h3 className="text-xl font-semibold text-gray-900 mb-5">Recent Scan Plans</h3>
+          <div className="space-y-3">
             {recentPlans.map((planData) => (
-              <div
+              <button
                 key={planData.id}
-                className="p-3 bg-slate-900/50 rounded border border-slate-700 hover:border-vigil-purple cursor-pointer transition-colors"
-                onClick={() => setScanPlan(planData.plan)}
+                onClick={() => {
+                  setScanPlan(planData.plan);
+                  setRepoUrl(planData.repo_url);
+                }}
+                className="w-full p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-400 hover:bg-gray-100 transition-all text-left group"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-white">{planData.project_name}</div>
-                    <div className="text-sm text-gray-400">{planData.repo_url}</div>
+                  <div className="flex-1">
+                    <div className="text-base font-semibold text-gray-900 group-hover:text-gray-700 transition-colors mb-1">
+                      {planData.plan.project_name}
+                    </div>
+                    <div className="text-sm text-gray-500">{planData.repo_url}</div>
                   </div>
-                  <div className={`text-sm font-medium ${getRiskColor(planData.risk_level)}`}>
-                    {planData.risk_level}
+                  <div className="flex items-center gap-4">
+                    <div className={`px-4 py-2 rounded-lg text-sm font-bold ${getRiskColor(planData.risk_level)}`}>
+                      {planData.risk_level}
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      {new Date(planData.generated_at).toLocaleDateString()}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>

@@ -14,30 +14,30 @@ function StatsBar({ events }) {
         icon={<Shield className="w-6 h-6" />}
         label="Total Scanned"
         value={stats.total}
-        color="text-slate-400"
-        bgColor="bg-vigil-card"
+        color="text-gray-700"
+        bgColor="bg-white"
       />
       <StatCard
         icon={<XCircle className="w-6 h-6" />}
         label="Blocked"
         value={stats.blocked}
-        color="text-vigil-red-light"
-        bgColor="bg-red-900/20"
+        color="text-red-600"
+        bgColor="bg-red-50"
         pulse={stats.blocked > 0}
       />
       <StatCard
         icon={<AlertTriangle className="w-6 h-6" />}
         label="Warnings"
         value={stats.warnings}
-        color="text-vigil-yellow-light"
-        bgColor="bg-yellow-900/20"
+        color="text-yellow-600"
+        bgColor="bg-yellow-50"
       />
       <StatCard
         icon={<CheckCircle className="w-6 h-6" />}
         label="Safe"
         value={stats.safe}
-        color="text-vigil-green-light"
-        bgColor="bg-green-900/20"
+        color="text-green-600"
+        bgColor="bg-green-50"
       />
     </div>
   )
@@ -45,7 +45,7 @@ function StatsBar({ events }) {
 
 function StatCard({ icon, label, value, color, bgColor, pulse }) {
   return (
-    <div className={`${bgColor} border border-vigil-border rounded-lg p-4 transition-all ${pulse ? 'animate-pulse-slow' : ''}`}>
+    <div className={`${bgColor} border border-gray-200 rounded-lg p-4 transition-all shadow-sm ${pulse ? 'ring-2 ring-red-200' : ''}`}>
       <div className="flex items-center justify-between">
         <div className={color}>
           {icon}
@@ -54,7 +54,7 @@ function StatCard({ icon, label, value, color, bgColor, pulse }) {
           <div className={`text-3xl font-bold ${color}`}>
             {value}
           </div>
-          <div className="text-sm text-slate-400 mt-1">
+          <div className="text-sm text-gray-500 mt-1">
             {label}
           </div>
         </div>

@@ -61,6 +61,8 @@ logs/
 .env
 .env.local
 .env.*.local
+.env.example
+
 
 # Temporary files
 *.tmp
@@ -80,7 +82,3 @@ ENV_SETUP.md
 SCAN_PLAN_FRONTEND.md
 SCAN_PLAN_GUIDE.md
 
-
-# env
-.env.example
-.env

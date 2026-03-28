@@ -14,55 +14,55 @@ function LiveFeed({ events, onSelectEvent, selectedEventId }) {
       case 'BLOCKED':
       case 'COMPROMISED':
         return {
-          dot: 'bg-vigil-red-light',
-          bg: 'bg-red-900/20 border-red-900/50 hover:bg-red-900/30',
-          text: 'text-vigil-red-light',
-          badge: 'bg-vigil-red text-white'
+          dot: 'bg-red-500',
+          bg: 'bg-red-50 border-red-200 hover:bg-red-100',
+          text: 'text-red-600',
+          badge: 'bg-red-600 text-white'
         }
       case 'WARNING':
         return {
-          dot: 'bg-vigil-yellow-light',
-          bg: 'bg-yellow-900/20 border-yellow-900/50 hover:bg-yellow-900/30',
-          text: 'text-vigil-yellow-light',
-          badge: 'bg-vigil-yellow text-white'
+          dot: 'bg-yellow-500',
+          bg: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100',
+          text: 'text-yellow-600',
+          badge: 'bg-yellow-600 text-white'
         }
       case 'ALLOWED':
       case 'CLEAN':
         return {
-          dot: 'bg-vigil-green-light',
-          bg: 'bg-green-900/10 border-vigil-border hover:bg-green-900/20',
-          text: 'text-vigil-green-light',
-          badge: 'bg-vigil-green text-white'
+          dot: 'bg-green-500',
+          bg: 'bg-green-50 border-green-200 hover:bg-green-100',
+          text: 'text-green-600',
+          badge: 'bg-green-600 text-white'
         }
       default:
         return {
-          dot: 'bg-slate-500',
-          bg: 'bg-vigil-card border-vigil-border hover:bg-vigil-border',
-          text: 'text-slate-400',
-          badge: 'bg-slate-700 text-white'
+          dot: 'bg-gray-400',
+          bg: 'bg-white border-gray-200 hover:bg-gray-50',
+          text: 'text-gray-600',
+          badge: 'bg-gray-600 text-white'
         }
     }
   }
 
   return (
-    <div className="bg-vigil-card border border-vigil-border rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-vigil-border flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <Package className="w-5 h-5" />
           Live Scan Feed
         </h2>
-        <span className="text-sm text-slate-400">{events.length} events</span>
+        <span className="text-sm text-gray-500">{events.length} events</span>
       </div>
 
       <div className="overflow-y-auto max-h-[600px]">
         {events.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
+          <div className="p-8 text-center text-gray-500">
             <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p>No scan events yet</p>
             <p className="text-sm mt-1">Run a demo or scan a package to see results</p>
           </div>
         ) : (
-          <div className="divide-y divide-vigil-border">
+          <div className="divide-y divide-gray-200">
             {events.map((event, index) => {
               const colors = getVerdictColor(event.verdict)
               const isSelected = event.id === selectedEventId
@@ -76,7 +76,7 @@ function LiveFeed({ events, onSelectEvent, selectedEventId }) {
                   key={event.id || index}
                   onClick={() => onSelectEvent(event)}
                   className={`p-4 cursor-pointer transition-all animate-slide-in border-l-4 ${
-                    isSelected ? 'border-l-vigil-purple' : 'border-l-transparent'
+                    isSelected ? 'border-l-gray-900' : 'border-l-transparent'
                   } ${colors.bg}`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
@@ -85,7 +85,7 @@ function LiveFeed({ events, onSelectEvent, selectedEventId }) {
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-sm font-medium text-white truncate">
+                        <span className="font-mono text-sm font-medium text-gray-900 truncate">
                           {packageName}
                         </span>
                         <span className={`px-2 py-0.5 rounded text-xs font-bold ${colors.badge}`}>
@@ -93,7 +93,7 @@ function LiveFeed({ events, onSelectEvent, selectedEventId }) {
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-3 text-xs text-slate-400">
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
                         <span className={`font-bold ${colors.text}`}>
                           Score: {score.toFixed(2)}
                         </span>
@@ -103,7 +103,7 @@ function LiveFeed({ events, onSelectEvent, selectedEventId }) {
                         </span>
                         <span>{scanMs}ms</span>
                         {event.machine && (
-                          <span className="text-slate-500">@ {event.machine}</span>
+                          <span className="text-gray-400">@ {event.machine}</span>
                         )}
                       </div>
                     </div>

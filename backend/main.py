@@ -12,6 +12,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from scanner import scan_wheel, scan_text_for_injection
 from scan_planner import generate_scan_plan, save_scan_plan, get_scan_plans, get_scan_plan_by_id, fetch_repo_info
+from cve_analyzer import analyze_package_cves, get_cve_summary
 
 # Load environment variables from .env file
 load_dotenv()
@@ -276,8 +277,108 @@ async def scan_text(request: ScanTextRequest):
     
     return result
 
-@app.post("/demo/attack")
-async def demo_attack():
+@app.post("/demo/populate")
+async def demo_populate():
+    """Populate the feed with multiple demo packages"""
+    demo_packages = [
+        {
+            "package": "requests==2.25.0",
+            "verdict": "WARNING",
+            "score": 0.45,
+            "findings": [
+                {"type": "OUTDATED_DEPENDENCY", "severity": "MEDIUM", "detail": "Package version is outdated"},
+                {"type": "KNOWN_VULNERABILITY", "severity": "MEDIUM", "detail": "CVE-2021-33503: Potential ReDoS vulnerability"}
+            ]
+        },
+        {
+            "package": "pillow==8.1.0",
+            "verdict": "BLOCKED",
+            "score": 0.85,
+            "findings": [
+                {"type": "CRITICAL_CVE", "severity": "CRITICAL", "detail": "CVE-2021-23437: Buffer overflow vulnerability"},
+                {"type": "SECURITY_ISSUE", "severity": "HIGH", "detail": "Multiple security vulnerabilities in image processing"}
+            ]
+        },
+        {
+            "package": "django==3.1.0",
+            "verdict": "WARNING",
+            "score": 0.52,
+            "findings": [
+                {"type": "OUTDATED_VERSION", "severity": "MEDIUM", "detail": "Django 3.1.0 has known security issues"},
+                {"type": "CVE_FOUND", "severity": "MEDIUM", "detail": "CVE-2021-31542: Potential directory traversal"}
+            ]
+        },
+        {
+            "package": "numpy==1.21.0",
+            "verdict": "ALLOWED",
+            "score": 0.05,
+            "findings": []
+        },
+        {
+            "package": "flask==1.1.1",
+            "verdict": "WARNING",
+            "score": 0.38,
+            "findings": [
+                {"type": "OUTDATED_DEPENDENCY", "severity": "LOW", "detail": "Newer version available with security fixes"}
+            ]
+        },
+        {
+            "package": "tensorflow==2.4.0",
+            "verdict": "ALLOWED",
+            "score": 0.12,
+            "findings": [
+                {"type": "MINOR_ISSUE", "severity": "LOW", "detail": "Consider updating to latest patch version"}
+            ]
+        },
+        {
+            "package": "urllib3==1.26.3",
+            "verdict": "ALLOWED",
+            "score": 0.08,
+            "findings": []
+        },
+        {
+            "package": "pyyaml==5.3.1",
+            "verdict": "BLOCKED",
+            "score": 0.92,
+            "findings": [
+                {"type": "CRITICAL_CVE", "severity": "CRITICAL", "detail": "CVE-2020-14343: Arbitrary code execution via unsafe loading"},
+                {"type": "SECURITY_RISK", "severity": "HIGH", "detail": "Known deserialization vulnerability"}
+            ]
+        }
+    ]
+    
+    events = []
+    for pkg_data in demo_packages:
+        event_id = save_event(
+            event_type="scan",
+            package=pkg_data["package"],
+            score=pkg_data["score"],
+            verdict=pkg_data["verdict"],
+            findings=pkg_data["findings"],
+            scan_ms=100 + (hash(pkg_data["package"]) % 200),
+            machine="localhost",
+            extra={"demo": True}
+        )
+        
+        event_data = {
+            "type": "scan_event",
+            "id": event_id,
+            "ts": time.time(),
+            "package": pkg_data["package"],
+            "score": pkg_data["score"],
+            "verdict": pkg_data["verdict"],
+            "findings": pkg_data["findings"],
+            "scan_ms": 100 + (hash(pkg_data["package"]) % 200),
+            "demo": True
+        }
+        
+        await manager.broadcast(event_data)
+        events.append(event_data)
+    
+    return {"success": True, "packages_added": len(demo_packages), "events": events}
+
+@app.post("/demo/block")
+async def demo_block():
     event_id = save_event(
         event_type="attack_demo",
         package="mock-litellm==1.82.7",
@@ -419,6 +520,12 @@ async def preview_scan_plan(request: ScanPlanRequest):
         "repo_info": repo_info,
         "repo_url": request.repo_url
     }
+
+@app.get("/cve/analyze/{package_name}")
+async def analyze_cve(package_name: str, version: Optional[str] = None):
+    """Analyze a package for known CVEs using OpenAI"""
+    cve_data = await analyze_package_cves(package_name, version)
+    return cve_data
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

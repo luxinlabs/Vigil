@@ -104,6 +104,14 @@ function App() {
     }
   }
 
+  const handlePopulatePackages = async () => {
+    try {
+      await fetch(`${API_URL}/demo/populate`, { method: 'POST' })
+    } catch (error) {
+      console.error('Populate packages failed:', error)
+    }
+  }
+
   const supplyEvents = events.filter(e => 
     e.event_type === 'scan' || e.type === 'scan_event' || e.type === 'attack_event'
   )
@@ -113,13 +121,13 @@ function App() {
   )
 
   return (
-    <div className="min-h-screen bg-vigil-bg text-slate-200">
-      <header className="border-b border-vigil-border bg-vigil-card">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      <header className="border-b border-gray-200 bg-white shadow-sm">
         <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <Eye className="w-8 h-8 text-vigil-purple" />
-              <h1 className="text-2xl font-bold text-white">Vigil</h1>
+              <Eye className="w-8 h-8 text-gray-900" />
+              <h1 className="text-2xl font-bold text-gray-900">Vigil</h1>
             </div>
             
             <nav className="flex gap-2">
@@ -127,8 +135,8 @@ function App() {
                 onClick={() => setActiveTab('supply')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   activeTab === 'supply'
-                    ? 'bg-vigil-purple text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-vigil-border'
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
                 Supply Chain
@@ -137,8 +145,8 @@ function App() {
                 onClick={() => setActiveTab('align')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   activeTab === 'align'
-                    ? 'bg-vigil-purple text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-vigil-border'
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
                 AlignGuard
@@ -147,8 +155,8 @@ function App() {
                 onClick={() => setActiveTab('scanplan')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   activeTab === 'scanplan'
-                    ? 'bg-vigil-purple text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-vigil-border'
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
                 Scan Plan
@@ -158,26 +166,32 @@ function App() {
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-sm">
-              <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-500 animate-pulse-slow' : 'bg-red-500'}`} />
-              <span className="text-slate-400">{wsConnected ? 'LIVE' : 'DISCONNECTED'}</span>
+              <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-gray-600">{wsConnected ? 'LIVE' : 'DISCONNECTED'}</span>
             </div>
             
             <div className="flex gap-2">
               <button
+                onClick={handlePopulatePackages}
+                className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors font-medium"
+              >
+                ▶ Populate Feed
+              </button>
+              <button
                 onClick={handleDemoAttack}
-                className="px-3 py-1 text-xs bg-red-900/30 text-red-400 rounded hover:bg-red-900/50 transition-colors"
+                className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors font-medium"
               >
                 ▶ Demo: Attack
               </button>
               <button
                 onClick={handleDemoBlock}
-                className="px-3 py-1 text-xs bg-vigil-purple/30 text-vigil-purple rounded hover:bg-vigil-purple/50 transition-colors"
+                className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors font-medium"
               >
                 ▶ Demo: Block
               </button>
               <button
                 onClick={handleDemoInject}
-                className="px-3 py-1 text-xs bg-yellow-900/30 text-yellow-400 rounded hover:bg-yellow-900/50 transition-colors"
+                className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors font-medium"
               >
                 ▶ Demo: Inject
               </button>
@@ -217,7 +231,7 @@ function App() {
         )}
       </main>
 
-      <footer className="fixed bottom-4 right-6 text-xs text-slate-600 font-mono">
+      <footer className="fixed bottom-4 right-6 text-xs text-gray-400 font-mono">
         Always watching
       </footer>
     </div>
