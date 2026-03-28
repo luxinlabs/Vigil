@@ -1,0 +1,11 @@
+{
+  "name": "vigil",
+  "version": "0.1.0",
+  "description": "AI Stack Security Platform",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "vercel-build": "cd frontend && npm install && npm run build"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
