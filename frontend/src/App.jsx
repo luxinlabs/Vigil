@@ -4,6 +4,7 @@ import StatsBar from './components/StatsBar'
 import LiveFeed from './components/LiveFeed'
 import ThreatDetail from './components/ThreatDetail'
 import AgentTab from './components/AgentTab'
+import ScanPlanTab from './components/ScanPlanTab'
 
 const WS_URL = 'ws://localhost:8000/ws'
 const API_URL = 'http://localhost:8000'
@@ -142,6 +143,16 @@ function App() {
               >
                 AlignGuard
               </button>
+              <button
+                onClick={() => setActiveTab('scanplan')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === 'scanplan'
+                    ? 'bg-vigil-purple text-white'
+                    : 'text-slate-400 hover:text-white hover:bg-vigil-border'
+                }`}
+              >
+                Scan Plan
+              </button>
             </nav>
           </div>
 
@@ -199,8 +210,10 @@ function App() {
               </div>
             </div>
           </>
-        ) : (
+        ) : activeTab === 'align' ? (
           <AgentTab events={alignEvents} />
+        ) : (
+          <ScanPlanTab />
         )}
       </main>
 

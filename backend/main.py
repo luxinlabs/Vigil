@@ -9,7 +9,12 @@ import os
 import httpx
 from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
 from scanner import scan_wheel, scan_text_for_injection
+from scan_planner import generate_scan_plan, save_scan_plan, get_scan_plans, get_scan_plan_by_id, fetch_repo_info
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = FastAPI(title="Vigil", version="0.1.0")
 
@@ -67,6 +72,18 @@ def init_db():
         CREATE TABLE IF NOT EXISTS killed_agents (
             agent_id TEXT PRIMARY KEY,
             killed_at REAL NOT NULL
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS scan_plans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            repo_url TEXT NOT NULL,
+            project_name TEXT,
+            risk_level TEXT,
+            plan_json TEXT NOT NULL,
+            generated_at TEXT NOT NULL,
+            model TEXT
         )
     """)
     
@@ -342,6 +359,66 @@ async def get_agent_status(agent_id: str):
         return {"killed": True, "killed_at": row[0]}
     else:
         return {"killed": False}
+
+class ScanPlanRequest(BaseModel):
+    repo_url: str
+
+@app.post("/scan/plan")
+async def create_scan_plan(request: ScanPlanRequest):
+    """Generate an AI-powered scan plan for a project"""
+    result = await generate_scan_plan(request.repo_url)
+    
+    if result.get("success") and result.get("plan"):
+        # Save to database
+        conn = sqlite3.connect(DB_PATH)
+        plan_id = await save_scan_plan(conn, result["plan"], request.repo_url)
+        conn.close()
+        
+        # Broadcast to WebSocket clients
+        await manager.broadcast({
+            "type": "scan_plan_created",
+            "plan_id": plan_id,
+            "repo_url": request.repo_url,
+            "project_name": result["plan"].get("project_name"),
+            "risk_level": result["plan"].get("risk_level")
+        })
+        
+        return {
+            "success": True,
+            "plan_id": plan_id,
+            "plan": result["plan"]
+        }
+    else:
+        raise HTTPException(status_code=500, detail=result.get("error", "Failed to generate scan plan"))
+
+@app.get("/scan/plans")
+async def list_scan_plans(limit: int = 10):
+    """Get recent scan plans"""
+    conn = sqlite3.connect(DB_PATH)
+    plans = await get_scan_plans(conn, limit)
+    conn.close()
+    return {"plans": plans}
+
+@app.get("/scan/plan/{plan_id}")
+async def get_scan_plan(plan_id: int):
+    """Get a specific scan plan"""
+    conn = sqlite3.connect(DB_PATH)
+    plan = await get_scan_plan_by_id(conn, plan_id)
+    conn.close()
+    
+    if plan:
+        return plan
+    else:
+        raise HTTPException(status_code=404, detail="Scan plan not found")
+
+@app.post("/scan/plan/preview")
+async def preview_scan_plan(request: ScanPlanRequest):
+    """Preview repo info before generating scan plan"""
+    repo_info = await fetch_repo_info(request.repo_url)
+    return {
+        "repo_info": repo_info,
+        "repo_url": request.repo_url
+    }
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
